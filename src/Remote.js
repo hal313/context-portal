@@ -75,7 +75,7 @@ export class Remote {
         // Add the function to the api
         Object.keys(api).forEach(name => {
             // Add wrapped function to host api
-            const addFunctionPromise = sendMessageToPortal(ACTIONS.addFunction, {name, fnString: api[name].toString()}, this.sendFunction).then(result => {
+            const addFunctionPromise = sendMessageToPortal(ACTIONS.addFunction, {name, fnString: api[name].toString()}, this.sendFunction).then(() => {
                 const sendFunction = this.sendFunction;
                 remoteAPI[name] = function() {
                     return sendMessageToPortal(ACTIONS.runFunction, {name, params: Array.from(arguments)}, sendFunction);
@@ -85,9 +85,10 @@ export class Remote {
         });
 
         return Promise.all(promises).then(() => remoteAPI);
-    };
+    }
 
     async runScript(script) {
         return sendMessageToPortal(ACTIONS.runScript, {script}, this.sendFunction);
-    };
+    }
+
 }

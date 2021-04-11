@@ -59,7 +59,7 @@ const addFunctionToPortalContext = async (name, fnString) => {
 };
 
 const runFunctionInPortalContext = async (name, params) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve/*, reject*/) => {
         // Need to quote the string params
         const paramArray = params.map(value => 'string' === typeof value ? `'${value}'` : value);
         const code = `return ${name}(${paramArray.join(',')})`;
@@ -111,7 +111,7 @@ export class Portal {
                     break;
                 default:
                     this.sendFunction(createMessage(ACTIONS.error, {message: 'unknown action: ' + action}, callbackId, false));
-            };
+            }
         };
 
         registerFn(remoteMessageHandler);
@@ -135,7 +135,7 @@ export class Portal {
                 this.sendFunction(createErrorMessage(ACTIONS.runScriptComplete, error, callbackId));
                 throw error;
             });
-    };
+    }
 
     addFunction (name, fnString, callbackId) {
         return new Promise((resolve, reject) => {
@@ -156,7 +156,7 @@ export class Portal {
                 });
             }
         });
-    };
+    }
 
     runFunction(name, callbackId, ...params) {
         return new Promise((resolve, reject) => {
@@ -176,6 +176,6 @@ export class Portal {
                 });
             }
         });
-    };
+    }
 
 }
