@@ -16,6 +16,7 @@ const callbackMap = {};
  */
 const generateCallbackId = () => new Date().getTime() + '' + Math.random()
 
+
 /**
  * Sends a message to the portal.
  *
@@ -36,6 +37,7 @@ const sendMessageToPortal = async (action, payload, sendFn) => {
 
     // Assemble the message
     const message = {
+        // The source is always "remote"
         source: SOURCES.remote,
         action,
         payload,
@@ -51,6 +53,7 @@ const sendMessageToPortal = async (action, payload, sendFn) => {
     // Return a promise
     return deferred.promise;
 };
+
 
 /**
  * Implements the remote (or client) side of the context portal. Clients use instances of the Remote
@@ -76,15 +79,17 @@ export class Remote {
          * @param {Object} message handles messages received  from the portal
          * @returns {undefined}
          */
-        const portalMessageHandler = (message) => {
+        const portalMessageHandler = message => {
             // Deconstruct the message
             let {action, payload, source, callbackId, success} = message;
 
 
             // Sanity check
+            // Check the source (should be "portal" and verify that an action was present)
             if (source !== SOURCES.portal || !action) {
                 return;
             }
+
 
             // Debugging
             if(DEBUG)console.log('remote', 'onMessage', message);

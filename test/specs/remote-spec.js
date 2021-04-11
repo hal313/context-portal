@@ -57,7 +57,7 @@ describe('Remote', function () {
             returnFalse: () => false,
             returnUndefined: () => undefined,
             returnNull: () => null,
-            returnArray: () => ['one', 2, true, false, undefined, null, {sub: 1}],
+            returnArray: () => ['one', 2, true, false, undefined, null, {sub: 1}, Promise.resolve(3)],
             returnPromise: () => Promise.resolve({dale: 3}),
             rejectPromise: () => Promise.reject('because i said so'),
             throwError: () => {throw new Error('some error')},
@@ -195,7 +195,7 @@ describe('Remote', function () {
             it('should return an array (using await)', async function () {
                 const result = await hostAPI.returnArray();
                 expect(result).to.be.a('array');
-                expect(result.length).to.equal(7);
+                expect(result.length).to.equal(8);
                 expect(result[0]).to.equal('one');
                 expect(result[0]).to.be.a('string');
                 expect(result[1]).to.equal(2);
@@ -210,13 +210,15 @@ describe('Remote', function () {
                 expect(result[5]).to.be.a('null');
                 expect(result[6]).to.eql({sub: 1});
                 expect(result[6]).to.be.an('object');
+                expect(result[7]).to.eql(3);
+                expect(result[7]).to.be.a('number');
             });
 
             it('should return an array (using promises)', function () {
                 return hostAPI.returnArray()
                 .then(result => {
                     expect(result).to.be.a('array');
-                    expect(result.length).to.equal(7);
+                    expect(result.length).to.equal(8);
                     expect(result[0]).to.equal('one');
                     expect(result[0]).to.be.a('string');
                     expect(result[1]).to.equal(2);
@@ -231,6 +233,8 @@ describe('Remote', function () {
                     expect(result[5]).to.be.a('null');
                     expect(result[6]).to.eql({sub: 1});
                     expect(result[6]).to.be.an('object');
+                    expect(result[7]).to.eql(3);
+                    expect(result[7]).to.be.a('number');
                 });
             });
 
@@ -374,9 +378,6 @@ describe('Remote', function () {
             });
 
         });
-
-
-
 
     });
 
