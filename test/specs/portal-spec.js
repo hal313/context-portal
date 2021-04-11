@@ -1,13 +1,13 @@
 import { Portal } from '../../src/Portal.js';
 
-
+// Assign testing functions
 const describe = Mocha.describe;
 const it = Mocha.it;
 const afterEach = Mocha.afterEach;
 const expect = chai.expect;
 const spy = sinon.spy;
 
-
+// Configure mocha
 mocha.setup({
     ui: 'bdd'
 });
