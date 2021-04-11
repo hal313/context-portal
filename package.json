@@ -1,0 +1,21 @@
+{
+  "name": "@hal313/context-portal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "type": "module",
+  "scripts": {
+    "test": "(node test/server/test-server.js &) && echo 'Starting server' && sleep 2 && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/remote.html && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/portal.html && curl http://127.0.0.1:3000/stop > /dev/null"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "eslint": "^7.23.0",
+    "mocha": "^8.3.2",
+    "mocha-headless": "^6.0.0",
+    "mocha-headless-chrome": "^3.1.0",
+    "serve-handler": "^6.1.3",
+    "sinon": "^10.0.0"
+  }
+}
