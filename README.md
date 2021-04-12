@@ -129,8 +129,6 @@ remote.createAPI({
 
 It is possible to send global variables to the portal context like so:
 ```javascript
-
-
 // Instantiate the portal
 const remote = new Remote(
     message => window.postMessage(message),
@@ -151,7 +149,6 @@ remote.runScript(`var helloString = '${helloString}'`)
 .then(api => api.hello('Pat'))
 .then(string => console.log(string))
 .catch(error => console.error('error', error));
-
 ```
 
 ## Architecture
@@ -182,4 +179,24 @@ The message formats between the portal and remote instances are documented below
         payload: Object,    // Parameters and such for the action
         callbackId: string  // A unique ID for the message (the portal's return message will have the same id)
     };
+```
+## Developing
+
+### Tests
+#### Browser
+Tests can be run in a browser a few different ways. However, tests MUST be run from a server and not loaded from disk, as doing so will violate security.
+
+This package has a built in server, which can be started like:
+```bash
+npm run serve-test
+```
+
+Open a browser to test the Remote: [http://127.0.0.1:3000/test/specs/remote](http://127.0.0.1:3000/test/specs/remote)
+
+Open a browser to test the Portal: [http://127.0.0.1:3000/test/specs/portal](http://127.0.0.1:3000/test/specs/portal)
+
+#### Headless
+Unit tests are implemented in Mocha/Chai and can be run within a browser or headless (useful for CI). To run the tests headless:
+```bash
+npm test
 ```
