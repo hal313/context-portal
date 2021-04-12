@@ -27,7 +27,8 @@ echo Building release: $VERSION
 ## Create a new branch and run a build
 git checkout -b release/$VERSION
 ## Make sure the build doesnt fail
-npm run build-prod
+npm run verify
+npm test
 ##
 ## Add and commit the build files and the new package version
 git add .
