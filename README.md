@@ -1,6 +1,6 @@
 # [context-portal](https://github.com/hal313/context-portal)
 
-[![Build Status](http://img.shields.io/travis/hal313/context-portal/master.svg?style=flat-square)](https://travis-ci.org/hal313/context-portal)
+[![Build Status](http://img.shields.io/travis/com/hal313/context-portal/master.svg?style=flat-square)](https://travis-ci.com/hal313/context-portal)
 [![Dependency Status](https://david-dm.org/hal313/context-portal.svg?style=flat-square)](https://david-dm.org/hal313/context-portal)
 [![DevDependency Status](https://david-dm.org/hal313/context-portal/dev-status.svg?style=flat-square)](https://david-dm.org/hal313/context-portal)
 [![npm Version](https://badge.fury.io/js/%40hal313%2Fcontext-portal.svg)](https://badge.fury.io/js/%40hal313%2Fcontext-portal)
