@@ -1,11 +1,10 @@
 language: node_js
-## addons:
-##   chrome: stable
 node_js:
   - '14.16.1'
 before_install:
   - npm install
 script:
+  - npm verify
   - npm test
 notifications:
   email:
