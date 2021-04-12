@@ -186,6 +186,8 @@ The message formats between the portal and remote instances are documented below
 #### Browser
 Tests can be run in a browser a few different ways. However, tests MUST be run from a server and not loaded from disk, as doing so will violate security.
 
+It is best to use IDE live-server functionality, as this often includes refreshing the page when code changes.
+
 This package has a built in server, which can be started like:
 ```bash
 npm run serve-test
