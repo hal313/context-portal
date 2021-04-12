@@ -29,6 +29,7 @@ git checkout -b release/$VERSION
 ## Make sure the build doesnt fail
 npm run verify
 npm test
+
 ##
 ## Add and commit the build files and the new package version
 git add .
