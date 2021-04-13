@@ -258,14 +258,14 @@ describe('Remote', function () {
                     await hostAPI.rejectPromise();
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED);
                 } catch (error) {
-                    expect(error).to.equal(message);
+                    expect(error.message).to.equal(message);
                 }
             });
 
             it('should throw when a promise is rejected (using promises)', function () {
                 return hostAPI.rejectPromise()
                 .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED);})
-                .catch(error => expect(error).to.equal(message))
+                .catch(error => expect(error.message).to.equal(message))
             });
 
         });
@@ -278,14 +278,14 @@ describe('Remote', function () {
                     await hostAPI.throwError();
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
                 } catch(error) {
-                    expect(error).to.equal(message);
+                    expect(error.message).to.equal(message);
                 }
             });
 
             it('should throw an error when the function throws an error (using promises)', function () {
                 return hostAPI.throwError()
                 .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
-                .catch(error => expect(error).to.equal(message));
+                .catch(error => expect(error.message).to.equal(message));
             });
 
         });
@@ -362,19 +362,42 @@ describe('Remote', function () {
         describe('Fail', function () {
             const message = 'this is an error';
 
-            it('should throw when the script throws (using await)', async function () {
-                try {
-                    await remotePortal.runScript(`throw new Error('${message}')`);
-                    throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
-                } catch (error) {
-                    expect(error.message).to.equal(message);
-                }
+            describe('Error Object', function () {
+
+                it('should throw when the script throws (using await)', async function () {
+                    try {
+                        await remotePortal.runScript(`throw new Error('${message}')`);
+                        throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
+                    } catch (error) {
+                        expect(error.message).to.equal(message);
+                    }
+                });
+
+                it('should throw when the script throws (using promises)', function () {
+                    return remotePortal.runScript(`throw new Error('${message}')`)
+                    .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
+                    .catch(error => expect(error.message).to.equal(message));
+                });
+
             });
 
-            it('should throw when the script throws (using promises)', function () {
-                return remotePortal.runScript(`throw new Error('${message}')`)
-                .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
-                .catch(error => expect(error.message).to.equal(message));
+            describe('Non Error Object', function () {
+
+                it('should throw when the script throws (using await)', async function () {
+                    try {
+                        await remotePortal.runScript(`throw '${message}'`);
+                        throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
+                    } catch (error) {
+                        expect(error.message).to.equal(message);
+                    }
+                });
+
+                it('should throw when the script throws (using promises)', function () {
+                    return remotePortal.runScript(`throw '${message}'`)
+                    .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
+                    .catch(error => expect(error.message).to.equal(message));
+                });
+
             });
 
         });

@@ -40,7 +40,12 @@ const createSuccessMessage = (action, result, callbackId) => createMessage(actio
  * @param {string} callbackId the callbackId associated with the message
  * @returns {Object} the message to send to the remote
  */
-const createErrorMessage = (action, error, callbackId) => createMessage(action, {error}, callbackId, false);
+ const createErrorMessage = (action, error, callbackId) => {
+    return createMessage(action, {
+        // If the error is an Error, break apart the components into "message" and "name"
+        error: (error instanceof Error ? {message: error.message, name: error.name} : error)
+    }, callbackId, false);
+};
 
 
 /**

@@ -107,7 +107,14 @@ export class Remote {
             if (success) {
                 deferred.resolve(payload.result);
             } else {
-                deferred.reject(payload.error);
+                // Error instances are sent with a "message" and "name" member; reconstitute this as an Error instance
+                if (payload?.error?.message && payload?.error?.name) {
+                    const error = new Error(payload.error.message);
+                    error.name = payload.error.name;
+                    deferred.reject(error);
+                } else {
+                    deferred.reject({message: payload.error});
+                }
             }
 
             // Remove the callback from the map; this helps
