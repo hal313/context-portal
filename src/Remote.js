@@ -98,8 +98,8 @@ export class Remote {
             const deferred = callbackMap[callbackId];
             // Sanity check
             if (!deferred) {
-                // This is an error
-                console.error(`No deferred for ${callbackId}`);
+                // This is an error (not necessary to log)
+                // console.error(`No deferred for ${callbackId}`);
                 return;
             }
 

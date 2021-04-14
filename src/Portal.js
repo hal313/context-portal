@@ -184,21 +184,21 @@ export class Portal {
                     // Add a function to the portal context
                     (() => {
                         const {name, fnString} = payload;
-                        this.addFunction(name, fnString, callbackId).catch(error => console.warn(`ERROR adding function: ${error}`))
+                        this.addFunction(name, fnString, callbackId).catch(/*error => console.warn(`ERROR adding function: ${error}`)*/)
                     })();
                     break;
                 case ACTIONS.runFunction:
                     // Execute a function in the portal context
                     (() => {
                         const {name, params} = payload;
-                        this.runFunction(name, callbackId, params).catch(error => console.warn(`ERROR running function: ${error}`))
+                        this.runFunction(name, callbackId, params).catch(/*error => console.warn(`ERROR running function: ${error}`)*/)
                     })();
                     break;
                 case ACTIONS.runScript:
                     // Run a script in the portal context
                     (() => {
                         const {script} = payload;
-                        this.runScript(script, callbackId).catch(error => console.warn(`ERROR running script: ${error}`));
+                        this.runScript(script, callbackId).catch(/*error => console.warn(`ERROR running script: ${error}`)*/);
                     })();
                     break;
                 default:
