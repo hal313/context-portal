@@ -99,7 +99,7 @@ export class Remote {
             // Sanity check
             if (!deferred) {
                 // This is an error (not necessary to log)
-                // console.error(`No deferred for ${callbackId}`);
+                console.error(`No deferred for ${callbackId}`);
                 return;
             }
 
