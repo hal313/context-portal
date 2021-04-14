@@ -103,6 +103,9 @@ In general, primative values, arrays and JSON-like objects can be used as parame
 
 If a function returns an array that contains a promise value which rejects, the entire function call will reject and the client will receive the rejection.
 
+### Errors
+If execution fails within the portal context, then an error will be received by any remote instances. All errors in the remote will have a "message" attribute which indicates the error. If the execution in the portal was an Error instance, an addition "name" attribute will be attached to the error object in the remote. In this case, an actual Error instance will be re-created, however only the message will persist; that is to say, the stack trace from the portal will NOT be present on the remote.
+
 ## Limitations
 Currently observables are not implemented.
 
