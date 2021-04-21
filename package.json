@@ -5,7 +5,7 @@
   "main": "",
   "type": "module",
   "scripts": {
-    "test": "(node test/server/test-server.js &) && echo 'Starting server' && sleep 2 && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/remote.html && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/portal.html && curl http://127.0.0.1:3000/stop > /dev/null",
+    "test": "(node test/server/test-server.js &) && echo 'Starting server' && sleep 2 && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/remote.html && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/portal.html && npx mocha-headless-chrome -f http://127.0.0.1:3000/test/specs/resolver.html && curl http://127.0.0.1:3000/stop > /dev/null",
     "serve-test": "node test/server/test-server.js",
     "verify": "npm run verify:src && npm run verify:test",
     "verify:src": "eslint src",

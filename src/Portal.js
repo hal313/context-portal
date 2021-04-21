@@ -1,4 +1,5 @@
 import { ACTIONS, SOURCES, DEBUG } from './Common.js';
+import * as Resolver from './Resolver.js';
 
 /**
  * Builds a message suitable for sending to the remote.
@@ -82,16 +83,8 @@ const runScriptInPortalContext = async (script) => {
             `;
 
             // Create a function and execute the function
-            let result = new Function(functionBody)();
-
-            // Handle arrays whose contents contain promises
-            //
-            // Sometimes the return value is an array which may have Promise instances as values; this
-            // code will be sure to resolve the Promises before the value is returned;
-            if (Array.isArray(result)) {
-                result = Promise.all(result.map(value => Promise.resolve(value)));
-            }
-            resolve(result);
+            // Resolve all promises within the result
+            resolve(Resolver.deepResolve(new Function(functionBody)()));
         } catch (error) {
             reject(error);
         }
