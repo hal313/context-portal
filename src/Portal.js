@@ -10,18 +10,14 @@ import * as Resolver from './Resolver.js';
  * @param {boolean} success true, if the operation succeeded; false otherwise
  * @returns {Object} the message to send to the remote
  */
-const createMessage = (action, payload, callbackId, success=true) => {
-    const message = {
-        // The source is always "portal"
-        source: SOURCES.portal,
-        action,
-        payload,
-        callbackId,
-        success
-    };
-
-    return message;
-};
+const createMessage = (action, payload, callbackId, success=true) => ({
+    // The source is always "portal"
+    source: SOURCES.portal,
+    action,
+    payload,
+    callbackId,
+    success
+});
 
 /**
  * Builds a success message for the remote.
@@ -41,12 +37,16 @@ const createSuccessMessage = (action, result, callbackId) => createMessage(actio
  * @param {string} callbackId the callbackId associated with the message
  * @returns {Object} the message to send to the remote
  */
- const createErrorMessage = (action, error, callbackId) => {
-    return createMessage(action, {
+ const createErrorMessage = (action, error, callbackId) => createMessage(
+     action,
+     {
         // If the error is an Error, break apart the components into "message" and "name"
         error: (error instanceof Error ? {message: error.message, name: error.name} : error)
-    }, callbackId, false);
-};
+    },
+    callbackId,
+    false
+);
+
 
 
 /**
@@ -55,42 +55,22 @@ const createSuccessMessage = (action, result, callbackId) => createMessage(actio
  * @param {string} script the JavaScript to run in the portal context
  * @returns {Promise} resolves to the return value of the script
  */
-const runScriptInPortalContext = async (script) => {
+const runScriptInPortalContext = async (script) => new Promise((resolve, reject) => {
+    try {
+        // Build the function body
+        const functionBody = `
+            "use strict";
+            ${script}
+        `;
 
-    // Original/alternative method to execute code
-    //
-    // return new Promise((resolve, reject) => {
-    //     try {
-    //         const functionBody = `
-    //             (function() {
-    //                 "use strict";
-    //                 ${script}
-    //             })();
-    //         `;
-    //         const result = eval(functionBody);
-    //         resolve(result);
-    //     } catch (error) {
-    //         reject(error);
-    //     }
-    // });
-
-    return new Promise((resolve, reject) => {
-        try {
-            // Build the function body
-            const functionBody = `
-                "use strict";
-                ${script}
-            `;
-
-            // 1.) Create and execute a function by using 'apply' with the window
-            // 2.) Resolve all promises within the result
-            const context = ('object' === typeof window) ? window : {};
-            resolve(Resolver.deepResolve(new Function(functionBody).apply(context)));
-        } catch (error) {
-            reject(error);
-        }
-    });
-};
+        // 1.) Create and execute a function by using 'apply' with the window
+        // 2.) Resolve all promises within the result
+        const context = ('object' === typeof window) ? window : {};
+        resolve(Resolver.deepResolve(new Function(functionBody).apply(context)));
+    } catch (error) {
+        reject(error);
+    }
+});
 
 /**
  * Adds a function to the portal context.
@@ -99,9 +79,7 @@ const runScriptInPortalContext = async (script) => {
  * @param {string} fnString a string representing the function code
  * @returns {Promise} resolves once the function has been added
  */
-const addFunctionToPortalContext = async (name, fnString) => {
-    return runScriptInPortalContext(`window.${name} = ${fnString};`);
-};
+const addFunctionToPortalContext = async (name, fnString) => runScriptInPortalContext(`window.${name} = ${fnString};`);
 
 /**
  * Executes a previously added function within the portal context.
@@ -110,8 +88,7 @@ const addFunctionToPortalContext = async (name, fnString) => {
  * @param {any[]} params the parameters to pass to the function
  * @returns {Promise} resolves to the result of function execution in the context portal; rejects on error
  */
-const runFunctionInPortalContext = async (name, params) => {
-    return new Promise((resolve/*, reject*/) => {
+const runFunctionInPortalContext = async (name, params) => new Promise((resolve/*, reject*/) => {
         // Need to quote the string params
         const paramArray = params.map(value => 'string' === typeof value ? `'${value}'` : value);
         // Construct the script to execute `return functionName(param1, parame)`
@@ -119,7 +96,6 @@ const runFunctionInPortalContext = async (name, params) => {
         // Resolve the value of running the script
         resolve(runScriptInPortalContext(code, params));
     });
-}
 
 
 /**
