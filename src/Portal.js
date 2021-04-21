@@ -82,9 +82,10 @@ const runScriptInPortalContext = async (script) => {
                 ${script}
             `;
 
-            // Create a function and execute the function
-            // Resolve all promises within the result
-            resolve(Resolver.deepResolve(new Function(functionBody)()));
+            // 1.) Create and execute a function by using 'apply' with the window
+            // 2.) Resolve all promises within the result
+            const context = ('object' === typeof window) ? window : {};
+            resolve(Resolver.deepResolve(new Function(functionBody).apply(context)));
         } catch (error) {
             reject(error);
         }
