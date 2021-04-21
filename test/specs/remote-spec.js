@@ -323,12 +323,12 @@ describe('Remote', function () {
         describe('With Parameters', function () {
 
             it('should return a value indicating that parameters were used (using await)', async function () {
-                const sum = await hostAPI.add(2,3);
+                const sum = await hostAPI.add(2, 3);
                 expect(sum).to.equal(5);
             });
 
             it('should return a value indicating that parameters were used (using promises)', function () {
-                return hostAPI.add(2,3)
+                return hostAPI.add(2, 3)
                 .then(sum => expect(sum).to.equal(5));
             });
 
