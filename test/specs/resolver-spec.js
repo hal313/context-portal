@@ -4,10 +4,7 @@ import * as Resolver from '../../src/Resolver.js';
 const describe = Mocha.describe;
 const it = Mocha.it;
 const afterEach = Mocha.afterEach;
-const after = Mocha.after;
-const before = Mocha.before;
 const expect = chai.expect;
-const spy = sinon.spy;
 
 // Configure mocha
 mocha.setup({
@@ -18,9 +15,6 @@ mocha.setup({
 // Passing arrow functions (aka “lambdas”) to Mocha is discouraged
 //   https://mochajs.org/#asynchronous-code
 describe('Resolve', function () {
-
-    const ERROR_MESSAGE_SHOULD_HAVE_REJECTED = 'should have rejected';
-    const ERROR_MESSAGE_SHOULD_HAVE_THROWN = 'should have thrown';
 
     afterEach(function cleanupSinon() {
         window.sinon.restore();
