@@ -6,16 +6,16 @@ import * as Resolver from './Resolver.js';
  *
  * @param {string} action the action to create a message for
  * @param {Object} payload the message payload
- * @param {string} callbackId the callbackId associated with the request
+ * @param {Object} remoteRequestMessage the remote request message
  * @param {boolean} success true, if the operation succeeded; false otherwise
  * @returns {Object} the message to send to the remote
  */
-const createMessage = (action, payload, callbackId, success=true) => ({
+const createMessage = (action, payload, remoteRequestMessage, success=true) => ({
     // The source is always "portal"
     source: SOURCES.portal,
     action,
     payload,
-    callbackId,
+    callbackId: remoteRequestMessage.callbackId,
     success
 });
 
@@ -24,26 +24,26 @@ const createMessage = (action, payload, callbackId, success=true) => ({
  *
  * @param {string} action the action to create the message for
  * @param {Object} result the action result
- * @param {string} callbackId the callbackId associated with the message
+ * @param {Object} remoteRequestMessage the remote request message
  * @returns {Object} the message to send to the remote
  */
-const createSuccessMessage = (action, result, callbackId) => createMessage(action, {result}, callbackId);
+const createSuccessMessage = (action, result, remoteRequestMessage) => createMessage(action, {result}, remoteRequestMessage);
 
 /**
  * Builds an error message for the remote.
  *
  * @param {string} action the action to create the message for
  * @param {Object} result the action result
- * @param {string} callbackId the callbackId associated with the message
+ * @param {Object} remoteRequestMessage the remote request message
  * @returns {Object} the message to send to the remote
  */
- const createErrorMessage = (action, error, callbackId) => createMessage(
+ const createErrorMessage = (action, error, remoteRequestMessage) => createMessage(
      action,
      {
         // If the error is an Error, break apart the components into "message" and "name"
         error: (error instanceof Error ? {message: error.message, name: error.name} : error)
     },
-    callbackId,
+    remoteRequestMessage,
     false
 );
 
@@ -88,14 +88,19 @@ const addFunctionToPortalContext = async (name, fnString) => runScriptInPortalCo
  * @param {any[]} params the parameters to pass to the function
  * @returns {Promise} resolves to the result of function execution in the context portal; rejects on error
  */
-const runFunctionInPortalContext = async (name, params) => new Promise((resolve/*, reject*/) => {
+const runFunctionInPortalContext = async (name, params) => {
+    // Resolve the parameters before running the script
+    const resolvedParams = await Resolver.deepResolve(params);
+
+    return new Promise((resolve/*, reject*/) => {
         // Need to quote the string params
-        const paramArray = params.map(value => 'string' === typeof value ? `'${value}'` : value);
+        const paramArray = resolvedParams.map(value => 'string' === typeof value ? `'${value}'` : value);
         // Construct the script to execute `return functionName(param1, parame)`
         const code = `return ${name}(${paramArray.join(',')})`;
         // Resolve the value of running the script
-        resolve(runScriptInPortalContext(code, params));
+        resolve(runScriptInPortalContext(code));
     });
+};
 
 
 /**
@@ -106,7 +111,7 @@ export class Portal {
     /**
      * Creates an instance of the portal.
      *
-     * @param {Function} sendFn the function which sends a message to the portal
+     * @param {Function} sendFn the function which sends a message to the portal, will be passed the message to send as well as the original request
      * @param {Function} registerFn the function which registers to listen to messages from the portal
      */
     constructor(sendFn, registerFn) {
@@ -122,10 +127,10 @@ export class Portal {
          * Handles messages from the remote. Responsible for parsing the request,
          * performing the requested action and sending results to the caller.
          *
-         * @param {Object} message handles messages received  from the remote
+         * @param {Object} remoteRequestMessage handles messages received  from the remote
          * @returns {undefined}
          */
-        const remoteMessageHandler = message => {
+        const remoteMessageHandler = remoteRequestMessage => {
             // Only handle messages when in a listening state
             if (!this.listening) {
                 if(DEBUG)console.log('portal', 'onMessage', 'ignoring: not listening');
@@ -133,7 +138,7 @@ export class Portal {
             }
 
             // Deconstruct the message
-            const {action, payload, source, callbackId} = message;
+            const {action, payload, source} = remoteRequestMessage;
 
 
             // Sanity check
@@ -145,7 +150,7 @@ export class Portal {
 
 
             // Debugging
-            if(DEBUG)console.log('portal', 'onMessage', message);
+            if(DEBUG)console.log('portal', 'onMessage', remoteRequestMessage);
 
             // Dispatch the action
             switch (action) {
@@ -154,26 +159,26 @@ export class Portal {
                     // Add a function to the portal context
                     (() => {
                         const {name, fnString} = payload;
-                        this.addFunction(name, fnString, callbackId).catch(/*error => console.warn(`ERROR adding function: ${error}`)*/)
+                        this.addFunction(name, fnString, remoteRequestMessage).catch(/*error => console.warn(`ERROR adding function: ${error}`)*/)
                     })();
                     break;
                 case ACTIONS.runFunction:
                     // Execute a function in the portal context
                     (() => {
                         const {name, params} = payload;
-                        this.runFunction(name, callbackId, params).catch(/*error => console.warn(`ERROR running function: ${error}`)*/)
+                        this.runFunction(name, remoteRequestMessage, params).catch(/*error => console.warn(`ERROR running function: ${error}`)*/)
                     })();
                     break;
                 case ACTIONS.runScript:
                     // Run a script in the portal context
                     (() => {
                         const {script} = payload;
-                        this.runScript(script, callbackId).catch(/*error => console.warn(`ERROR running script: ${error}`)*/);
+                        this.runScript(script, remoteRequestMessage).catch(/*error => console.warn(`ERROR running script: ${error}`)*/);
                     })();
                     break;
                 default:
                     // Unknown action
-                    this.sendFunction(createMessage(ACTIONS.error, {message: 'unknown action: ' + action}, callbackId, false));
+                    this.sendFunction(createMessage(ACTIONS.error, {message: 'unknown action: ' + action}, remoteRequestMessage, false));
             }
         };
 
@@ -205,20 +210,20 @@ export class Portal {
      * Executes script within the portal context.
      *
      * @param {string} script the script to run
-     * @param {string} callbackId the callbackId associated with the request
+     * @param {Object} remoteRequestMessage the remote request message
      * @returns {Promise} resolves to the result of the script; rejects on error
      */
-    runScript(script, callbackId) {
+    runScript(script, remoteRequestMessage) {
         // Execute the script
         return runScriptInPortalContext(script)
             .then(result => {
                 // Send a success message
-                this.sendFunction(createSuccessMessage(ACTIONS.runScriptComplete, result, callbackId));
+                this.sendFunction(createSuccessMessage(ACTIONS.runScriptComplete, result, remoteRequestMessage), remoteRequestMessage);
                 return result;
             })
             .catch(error => {
                 // Send an error message
-                this.sendFunction(createErrorMessage(ACTIONS.runScriptComplete, error, callbackId));
+                this.sendFunction(createErrorMessage(ACTIONS.runScriptComplete, error, remoteRequestMessage), remoteRequestMessage);
                 throw error;
             });
     }
@@ -228,24 +233,24 @@ export class Portal {
      *
      * @param {string} name the name of the function to add
      * @param {string} fnString the string representation of the function
-     * @param {string} callbackId the callbackId associated with the request
+     * @param {Object} remoteRequestMessage the remote request message
      * @returns {Promise} resolves after the function has been added to the portal context; rejects on error
      */
-    addFunction (name, fnString, callbackId) {
+    addFunction(name, fnString, remoteRequestMessage) {
         return new Promise((resolve, reject) => {
             if ('string' !== typeof name) {
                 const error = 'Function name must be a string';
-                this.sendFunction(createErrorMessage(ACTIONS.addFunctionComplete, error, callbackId));
+                this.sendFunction(createErrorMessage(ACTIONS.addFunctionComplete, error, remoteRequestMessage), remoteRequestMessage);
                 reject(error);
             } else {
                 return addFunctionToPortalContext(name, fnString)
                 .then(() => {
                     this.functions.push(name);
-                    this.sendFunction(createSuccessMessage(ACTIONS.addFunctionComplete, name, callbackId));
+                    this.sendFunction(createSuccessMessage(ACTIONS.addFunctionComplete, name, remoteRequestMessage), remoteRequestMessage);
                     resolve();
                 })
                 .catch(error => {
-                    this.sendFunction(createErrorMessage(ACTIONS.addFunctionComplete, error, callbackId));
+                    this.sendFunction(createErrorMessage(ACTIONS.addFunctionComplete, error, remoteRequestMessage), remoteRequestMessage);
                     throw error;
                 });
             }
@@ -256,29 +261,30 @@ export class Portal {
      * Executes a previously added function within the portal context.
      *
      * @param {string} name the name of the function to execute
-     * @param {string} callbackId the callbackId associated with the request
+     * @param {Object} remoteRequestMessage the remote request message
      * @param  {...any} [params] parameters for the function execution
      * @returns {Promise} resolves with the result of the function execution; rejects on error
      */
-    runFunction(name, callbackId, ...params) {
+    runFunction(name, remoteRequestMessage, ...params) {
         return new Promise((resolve, reject) => {
             // Check to see if the function has been added
             if (!this.functions.includes(name)) {
                 const error = `Unknown function '${name}'`;
                 // Reject
-                this.sendFunction(createErrorMessage(ACTIONS.runFunctionComplete, error, callbackId));
+                this.sendFunction(createErrorMessage(ACTIONS.runFunctionComplete, error, remoteRequestMessage), remoteRequestMessage);
                 reject(error);
             } else {
                 // Excecute the function
+                console.log('running function', name, params);
                 runFunctionInPortalContext(name, params)
                 .then(result => {
                     // Resolve the result
-                    this.sendFunction(createSuccessMessage(ACTIONS.runFunctionComplete, result, callbackId));
+                    this.sendFunction(createSuccessMessage(ACTIONS.runFunctionComplete, result, remoteRequestMessage), remoteRequestMessage);
                     resolve(result);
                 })
                 .catch(error => {
                     // Reject
-                    this.sendFunction(createErrorMessage(ACTIONS.runFunctionComplete, error.message || error, callbackId));
+                    this.sendFunction(createErrorMessage(ACTIONS.runFunctionComplete, error.message || error, remoteRequestMessage), remoteRequestMessage);
                     reject(error);
                 });
             }
