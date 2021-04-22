@@ -275,7 +275,6 @@ export class Portal {
                 reject(error);
             } else {
                 // Excecute the function
-                console.log('running function', name, params);
                 runFunctionInPortalContext(name, params)
                 .then(result => {
                     // Resolve the result
