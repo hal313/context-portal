@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Portal Playground</title>
+    </head>
+
+    <body>
+        <p>
+            Open the developer console and play with portals and remotes. The <code>Portal</code> and
+            <code>Remote</code> classes are attached as globals for use.
+        </p>
+        <p>Open the developer console to get started.</p>
+
+        <pre>
+            // Sample code -- copy and paste into the developer console
+
+            // Create a portal instance
+            const portal = new Portal(
+                (responseMessage, requestMessage) => window.postMessage(responseMessage),
+                // message.data contains the request from remote instances
+                (handler) => window.addEventListener('message', message => handler(message.data))
+            );
+            // Start the portal
+            portal.start();
+
+            // Create a remote instance
+            const remote = new Remote(
+                (responseMessage, requestMessage) => window.postMessage(responseMessage),
+                // message.data contains the request from remote instances
+                (handler) => window.addEventListener('message', message => handler(message.data))
+            );
+
+            // Create an API to use
+            const api = await remote.createAPI({
+                sum: (a, b) => a+b
+            });
+            console.log('sum(2, 3)', await api.sum(2, 3));
+
+            // Run a sample script
+            await remote.runScript(`console.log('running in the portal context')`);
+        </pre>
+
+
+        <script type="module" src="../src/Portal.js"></script>
+        <script type="module" src="../src/Remote.js"></script>
+
+        <script type="module">
+            import { Portal } from '../src/Portal.js';
+            import { Remote } from '../src/Remote.js';
+            window.Portal = Portal;
+            window.Remote = Remote;
+        </script>
+    </body>
+</html>
