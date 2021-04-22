@@ -23,6 +23,7 @@ describe('Portal', function () {
 
     // The callback seed
     let callbackId = 1;
+    const createRemoteRequestMessage = () => ({callbackId: ++callbackId});
 
 
     const messageFn = sinon.fake();
@@ -33,10 +34,6 @@ describe('Portal', function () {
         registerFn
     );
 
-
-    afterEach(function incrementCallbackId() {
-        callbackId++;
-    });
 
     afterEach(function stopPortal() {
         portal.stop();
@@ -73,12 +70,13 @@ describe('Portal', function () {
         describe('Messaging', function () {
 
             it('should send a message with the corrext metadata and a payload after execution', async function () {
-                await portal.runScript(`return 1+1;`, callbackId);
+                const remoteRequestMessage = createRemoteRequestMessage();
+                await portal.runScript(`return 1+1;`, remoteRequestMessage);
 
                 const args = messageFn.lastCall.args
                 expect(args[0].source).to.equal('portal');
                 expect(args[0].action).to.equal('runScriptComplete');
-                expect(args[0].callbackId).to.equal(callbackId);
+                expect(args[0].callbackId).to.equal(remoteRequestMessage.callbackId);
                 expect(args[0].success).to.equal(true);
                 expect(args[0].payload.result).to.equal(2);
             });
@@ -92,7 +90,7 @@ describe('Portal', function () {
                 it('should run code snippets (using await)', async function () {
                     spy(console, 'log');
 
-                    await portal.runScript(`console.log('running simple code');`, callbackId);
+                    await portal.runScript(`console.log('running simple code');`, createRemoteRequestMessage());
 
                     // console.log should have been called once
                     expect(console.log.callCount).to.equal(1);
@@ -104,7 +102,7 @@ describe('Portal', function () {
                     spy(console, 'log');
 
                     // Check the args
-                    return portal.runScript(`console.log('running simple code'); return 1;`, callbackId)
+                    return portal.runScript(`console.log('running simple code'); return 1;`, createRemoteRequestMessage())
                     .then(() => {
                         // console.log should have been called once
                         expect(console.log.callCount).to.equal(1);
@@ -118,11 +116,11 @@ describe('Portal', function () {
             describe('Return Value', function () {
 
                 it('should run code snippets (using await)', async function () {
-                    expect(await portal.runScript(`return 1+1;`, callbackId)).to.equal(2);
+                    expect(await portal.runScript(`return 1+1;`, createRemoteRequestMessage())).to.equal(2);
                 });
 
                 it('should run code snippets (using promises)', function () {
-                    return portal.runScript(`return 1+1;`, callbackId)
+                    return portal.runScript(`return 1+1;`, createRemoteRequestMessage())
                     .then(result => expect(result).to.equal(2));
                 });
 
@@ -135,7 +133,7 @@ describe('Portal', function () {
 
             it('should throw when code snipets fail (using await)', async function () {
                 try {
-                    await portal.runScript(`throw new Error('${message}')`, callbackId);
+                    await portal.runScript(`throw new Error('${message}')`, createRemoteRequestMessage());
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
                 } catch (error) {
                     expect(error.message).to.equal(message);
@@ -143,7 +141,7 @@ describe('Portal', function () {
             });
 
             it('should reject when code snipets fail (using promises)', function () {
-                return portal.runScript(`throw new Error('${message}')`, callbackId)
+                return portal.runScript(`throw new Error('${message}')`, createRemoteRequestMessage())
                 .then(() => { throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED); })
                 .catch(error => expect(error.message).to.equal(message));
             });
@@ -156,14 +154,15 @@ describe('Portal', function () {
 
         describe('Messaging', function () {
 
-            it('should send a message with the corrext metadata and a payload after execution', async function () {
+            it('should send a message with the correct metadata and a payload after execution', async function () {
                 const fnName = 'echo'
-                await portal.addFunction(fnName, text => text, callbackId);
+                const remoteRequestMessage = createRemoteRequestMessage();
+                await portal.addFunction(fnName, text => text, remoteRequestMessage);
 
                 const args = messageFn.lastCall.args
                 expect(args[0].source).to.equal('portal');
                 expect(args[0].action).to.equal('addFunctionComplete');
-                expect(args[0].callbackId).to.equal(callbackId);
+                expect(args[0].callbackId).to.equal(remoteRequestMessage.callbackId);
                 expect(args[0].success).to.equal(true);
                 expect(args[0].payload.result).to.equal(fnName);
             });
@@ -173,11 +172,11 @@ describe('Portal', function () {
         describe('Success', function () {
 
             it('should add a function (using await)', async function () {
-                await portal.addFunction('echo', text => text, callbackId);
+                await portal.addFunction('echo', text => text, createRemoteRequestMessage());
             });
 
             it('should add a function (using promises)', function () {
-                return portal.addFunction('echo', text => text, callbackId);
+                return portal.addFunction('echo', text => text, createRemoteRequestMessage());
             });
 
         });
@@ -185,17 +184,17 @@ describe('Portal', function () {
         describe('Fail', function () {
             const ERROR_FUNCTION_NAME_MUST_BE_STRING = 'Function name must be a string';
 
-            it('should throw when adding an invalid function (using await)', async function () {
+            it('should throw when adding an unnamed function (using await)', async function () {
                 try {
-                    await portal.addFunction(function echo(text) {return text;}, callbackId);
+                    await portal.addFunction(null, function echo(text) {return text;}, createRemoteRequestMessage());
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
                 } catch (error) {
                     expect(error).to.equal(ERROR_FUNCTION_NAME_MUST_BE_STRING);
                 }
             });
 
-            it('should throw when adding an invalid function (using promises)', function () {
-                return portal.addFunction(function echo(text) {return text;}, callbackId)
+            it('should throw when adding an unnamed function (using promises)', function () {
+                return portal.addFunction(null, function echo(text) {return text;}, createRemoteRequestMessage())
                 .then(() => { throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED); })
                 .catch(error => expect(error).to.equal(ERROR_FUNCTION_NAME_MUST_BE_STRING));
             });
@@ -208,16 +207,17 @@ describe('Portal', function () {
 
         describe('Messaging', function () {
 
-            it('should send a message with the corrext metadata and a payload after execution', async function () {
+            it('should send a message with the correct metadata and a payload after execution', async function () {
                 const fnName = 'mult';
+                const remoteRequestMessage = createRemoteRequestMessage();
 
-                await portal.addFunction(fnName, (a, b) => a * b, callbackId);
-                await portal.runFunction(fnName, callbackId, 1, 5);
+                await portal.addFunction(fnName, (a, b) => a * b, createRemoteRequestMessage());
+                await portal.runFunction(fnName, remoteRequestMessage, 1, 5);
 
                 const args = messageFn.lastCall.args
                 expect(args[0].source).to.equal('portal');
                 expect(args[0].action).to.equal('runFunctionComplete');
-                expect(args[0].callbackId).to.equal(callbackId);
+                expect(args[0].callbackId).to.equal(remoteRequestMessage.callbackId);
                 expect(args[0].success).to.equal(true);
                 expect(args[0].payload.result).to.equal(5);
             });
@@ -234,8 +234,8 @@ describe('Portal', function () {
 
                     spy(console, 'log');
 
-                    await portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, callbackId);
-                    await portal.runFunction(functionName, callbackId, ...args);
+                    await portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage());
+                    await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
 
                     // console.log should have been called once
                     expect(console.log.callCount).to.equal(1);
@@ -252,9 +252,8 @@ describe('Portal', function () {
 
                     spy(console, 'log');
 
-                    // portal.addFunction(functionName, function paramsFunctionSum() {console.log('paramsFunctionSum', Array.from(arguments))}, callbackId)
-                    return portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, callbackId)
-                    .then(() => portal.runFunction(functionName, callbackId, ...args))
+                    return portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage())
+                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))
                     .then(() => {
                         // console.log should have been called once
                         expect(console.log.callCount).to.equal(1);
@@ -271,13 +270,13 @@ describe('Portal', function () {
             describe('With Return Value', function () {
 
                 it('should return the correct value (using async)', async function () {
-                    await portal.addFunction('sum', (a, b) => a+b, callbackId);
-                    expect(await portal.runFunction('sum', callbackId, 10, 20)).to.equal(30);
+                    await portal.addFunction('sum', (a, b) => a+b, createRemoteRequestMessage());
+                    expect(await portal.runFunction('sum', createRemoteRequestMessage(), 10, 20)).to.equal(30);
                 });
 
                 it('should return the correct value (using promises)', async function () {
-                    return portal.addFunction('sum', (a, b) => a+b, callbackId)
-                    .then(() => portal.runFunction('sum', callbackId, 10, 20))
+                    return portal.addFunction('sum', (a, b) => a+b, createRemoteRequestMessage())
+                    .then(() => portal.runFunction('sum', createRemoteRequestMessage(), 10, 20))
                     .then(sum => expect(sum).to.equal(30));
                 });
 
@@ -291,8 +290,8 @@ describe('Portal', function () {
 
                     spy(console, 'log');
 
-                    await portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), callbackId);
-                    await portal.runFunction(functionName, callbackId, ...args);
+                    await portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage());
+                    await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
 
                     // console.log should have been called once
                     expect(console.log.callCount).to.equal(1);
@@ -307,8 +306,8 @@ describe('Portal', function () {
 
                     spy(console, 'log');
 
-                    return portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), callbackId)
-                    .then(() => portal.runFunction(functionName, callbackId, ...args))
+                    return portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage())
+                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))
                     .then(() => {
                         // console.log should have been called once
                         expect(console.log.callCount).to.equal(1);
@@ -323,15 +322,15 @@ describe('Portal', function () {
             describe('Invoking Other Functions', function () {
 
                 it('should be able to execute other functions which have been defined (using async)', async function () {
-                    await portal.addFunction('a', () => 'A', callbackId);
-                    await portal.addFunction('b', () => a() + 'B', callbackId);
-                    expect(await portal.runFunction('b', callbackId)).to.equal('AB');
+                    await portal.addFunction('a', () => 'A', createRemoteRequestMessage());
+                    await portal.addFunction('b', () => a() + 'B', createRemoteRequestMessage());
+                    expect(await portal.runFunction('b', createRemoteRequestMessage())).to.equal('AB');
                 });
 
                 it('should be able to execute other functions which have been defined (using promises)', function () {
-                    return portal.addFunction('a', () => 'A', callbackId)
-                    .then(() => portal.addFunction('b', () => a() + 'B', callbackId))
-                    .then(() => portal.runFunction('b', callbackId))
+                    return portal.addFunction('a', () => 'A', createRemoteRequestMessage())
+                    .then(() => portal.addFunction('b', () => a() + 'B', createRemoteRequestMessage()))
+                    .then(() => portal.runFunction('b', createRemoteRequestMessage()))
                     .then(result => expect(result).to.equal('AB'));
                 });
 
@@ -342,7 +341,7 @@ describe('Portal', function () {
 
                 it('should fail when the function does not exist (using await)', async function () {
                     try {
-                        await portal.runFunction('notfunction', callbackId);
+                        await portal.runFunction('notfunction', createRemoteRequestMessage());
                         throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED);
                     } catch (error) {
                         expect(error).to.equal(ERROR_UNKNOWN_FUNCTION);
@@ -350,7 +349,7 @@ describe('Portal', function () {
                 });
 
                 it('should fail when the function does not exist (using promises)', function () {
-                    return portal.runFunction('notfunction', callbackId)
+                    return portal.runFunction('notfunction', createRemoteRequestMessage())
                     .then(() => { throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED); })
                     .catch(error => expect(error).to.equal(ERROR_UNKNOWN_FUNCTION));
                 });
@@ -362,10 +361,10 @@ describe('Portal', function () {
 
                 it('should throw an error when the function throws an error (using await)', async function () {
                     // Cannot use "message" because that is not defined in the execution scope
-                    await portal.addFunction('throwingFunction', () => {throw new Error('throwing an error');}, callbackId);
+                    await portal.addFunction('throwingFunction', () => {throw new Error('throwing an error');}, createRemoteRequestMessage());
 
                     try {
-                        await portal.runFunction('throwingFunction', callbackId);
+                        await portal.runFunction('throwingFunction', createRemoteRequestMessage());
                         throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
                     } catch (error) {
                         expect(error.message).to.equal(message);
@@ -374,8 +373,8 @@ describe('Portal', function () {
 
                 it('should throw an error when the function throws an error (using promises)', function () {
                     // Cannot use "message" because that is not defined in the execution scope
-                    return portal.addFunction('throwingFunction', () => {throw new Error('throwing an error');}, callbackId)
-                    .then(() => portal.runFunction('throwingFunction', callbackId))
+                    return portal.addFunction('throwingFunction', () => {throw new Error('throwing an error');}, createRemoteRequestMessage())
+                    .then(() => portal.runFunction('throwingFunction', createRemoteRequestMessage()))
                     .then(() => { throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED); })
                     .catch(error => expect(error.message).to.equal(message));
                 });

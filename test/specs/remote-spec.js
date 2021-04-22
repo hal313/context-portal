@@ -57,7 +57,7 @@ describe('Remote', function () {
             returnFalse: () => false,
             returnUndefined: () => undefined,
             returnNull: () => null,
-            returnArray: () => ['one', 2, true, false, undefined, null, {sub: 1}, Promise.resolve(3)],
+            returnArray: () => ['one', 2, true, false, undefined, null, {sub: 1}, Promise.resolve(3), [1, 2, Promise.resolve(3)]],
             returnPromise: () => Promise.resolve({dale: 3}),
             rejectPromise: () => Promise.reject('because i said so'),
             throwError: () => {throw new Error('some error')},
@@ -195,7 +195,7 @@ describe('Remote', function () {
             it('should return an array (using await)', async function () {
                 const result = await hostAPI.returnArray();
                 expect(result).to.be.a('array');
-                expect(result.length).to.equal(8);
+                expect(result.length).to.equal(9);
                 expect(result[0]).to.equal('one');
                 expect(result[0]).to.be.a('string');
                 expect(result[1]).to.equal(2);
@@ -212,13 +212,15 @@ describe('Remote', function () {
                 expect(result[6]).to.be.an('object');
                 expect(result[7]).to.eql(3);
                 expect(result[7]).to.be.a('number');
+                expect(result[8]).to.eql([1, 2, 3]);
+                expect(result[8]).to.be.an('array');
             });
 
             it('should return an array (using promises)', function () {
                 return hostAPI.returnArray()
                 .then(result => {
                     expect(result).to.be.a('array');
-                    expect(result.length).to.equal(8);
+                    expect(result.length).to.equal(9);
                     expect(result[0]).to.equal('one');
                     expect(result[0]).to.be.a('string');
                     expect(result[1]).to.equal(2);
@@ -235,6 +237,8 @@ describe('Remote', function () {
                     expect(result[6]).to.be.an('object');
                     expect(result[7]).to.eql(3);
                     expect(result[7]).to.be.a('number');
+                    expect(result[8]).to.eql([1, 2, 3]);
+                    expect(result[8]).to.be.an('array');
                 });
             });
 
@@ -258,14 +262,14 @@ describe('Remote', function () {
                     await hostAPI.rejectPromise();
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED);
                 } catch (error) {
-                    expect(error).to.equal(message);
+                    expect(error.message).to.equal(message);
                 }
             });
 
             it('should throw when a promise is rejected (using promises)', function () {
                 return hostAPI.rejectPromise()
                 .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_REJECTED);})
-                .catch(error => expect(error).to.equal(message))
+                .catch(error => expect(error.message).to.equal(message))
             });
 
         });
@@ -278,14 +282,14 @@ describe('Remote', function () {
                     await hostAPI.throwError();
                     throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
                 } catch(error) {
-                    expect(error).to.equal(message);
+                    expect(error.message).to.equal(message);
                 }
             });
 
             it('should throw an error when the function throws an error (using promises)', function () {
                 return hostAPI.throwError()
                 .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
-                .catch(error => expect(error).to.equal(message));
+                .catch(error => expect(error.message).to.equal(message));
             });
 
         });
@@ -319,12 +323,12 @@ describe('Remote', function () {
         describe('With Parameters', function () {
 
             it('should return a value indicating that parameters were used (using await)', async function () {
-                const sum = await hostAPI.add(2,3);
+                const sum = await hostAPI.add(2, 3);
                 expect(sum).to.equal(5);
             });
 
             it('should return a value indicating that parameters were used (using promises)', function () {
-                return hostAPI.add(2,3)
+                return hostAPI.add(2, 3)
                 .then(sum => expect(sum).to.equal(5));
             });
 
@@ -362,19 +366,42 @@ describe('Remote', function () {
         describe('Fail', function () {
             const message = 'this is an error';
 
-            it('should throw when the script throws (using await)', async function () {
-                try {
-                    await remotePortal.runScript(`throw new Error('${message}')`);
-                    throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
-                } catch (error) {
-                    expect(error.message).to.equal(message);
-                }
+            describe('Error Object', function () {
+
+                it('should throw when the script throws (using await)', async function () {
+                    try {
+                        await remotePortal.runScript(`throw new Error('${message}')`);
+                        throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
+                    } catch (error) {
+                        expect(error.message).to.equal(message);
+                    }
+                });
+
+                it('should throw when the script throws (using promises)', function () {
+                    return remotePortal.runScript(`throw new Error('${message}')`)
+                    .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
+                    .catch(error => expect(error.message).to.equal(message));
+                });
+
             });
 
-            it('should throw when the script throws (using promises)', function () {
-                return remotePortal.runScript(`throw new Error('${message}')`)
-                .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
-                .catch(error => expect(error.message).to.equal(message));
+            describe('Non Error Object', function () {
+
+                it('should throw when the script throws (using await)', async function () {
+                    try {
+                        await remotePortal.runScript(`throw '${message}'`);
+                        throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);
+                    } catch (error) {
+                        expect(error.message).to.equal(message);
+                    }
+                });
+
+                it('should throw when the script throws (using promises)', function () {
+                    return remotePortal.runScript(`throw '${message}'`)
+                    .then(() => {throw new Error(ERROR_MESSAGE_SHOULD_HAVE_THROWN);})
+                    .catch(error => expect(error.message).to.equal(message));
+                });
+
             });
 
         });

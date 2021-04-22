@@ -1,4 +1,5 @@
 import { ACTIONS, SOURCES, DEBUG } from './Common.js';
+import * as Resolver from './Resolver.js';
 import { Deferred } from './Deferred.js';
 
 // This map stores callback functions keyed by callbackId's.
@@ -98,7 +99,7 @@ export class Remote {
             const deferred = callbackMap[callbackId];
             // Sanity check
             if (!deferred) {
-                // This is an error
+                // This is an error (not necessary to log)
                 console.error(`No deferred for ${callbackId}`);
                 return;
             }
@@ -107,7 +108,14 @@ export class Remote {
             if (success) {
                 deferred.resolve(payload.result);
             } else {
-                deferred.reject(payload.error);
+                // Error instances are sent with a "message" and "name" member; reconstitute this as an Error instance
+                if (payload?.error?.message && payload?.error?.name) {
+                    const error = new Error(payload.error.message);
+                    error.name = payload.error.name;
+                    deferred.reject(error);
+                } else {
+                    deferred.reject({message: payload.error});
+                }
             }
 
             // Remove the callback from the map; this helps
@@ -152,9 +160,12 @@ export class Remote {
                 // The returned function will be a wrapper function that requests the portal to execute the newly added function
                 const sendFunction = this.sendFunction;
                 // Add the wrapper to the remote API
-                remoteAPI[name] = function() {
+                remoteAPI[name] = async function() {
+                    // Resolve the parameters in case there are promises
+                    const resolvedParams = await Resolver.deepResolve(Array.from(arguments));
+
                     // The wrapper will serialize the arguments and send the invocation request to the portal
-                    return sendMessageToPortal(ACTIONS.runFunction, {name, params: Array.from(arguments)}, sendFunction);
+                    return sendMessageToPortal(ACTIONS.runFunction, {name, params: resolvedParams}, sendFunction);
                 };
             });
             // Add the "add function" promise to the collection of promises
