@@ -20,24 +20,17 @@ const resolveObject = (object) => {
     .then(async () => await (returnedObject));
 };
 
-
-const isPrimative = item => undefined === item || null == item || 'string' === typeof item || 'number' === typeof item || 'boolean' === typeof item;
-const isFunction = fn => 'function' === typeof fn;
-const isArray = array => Array.isArray(array);
-const isPromise = promise => (promise) instanceof Promise;
-const isObject = object => 'object' === typeof object;
-
 export const deepResolve = async (item) => {
 
-    if (isArray(item)) {
+    if (Array.isArray(item)) {
         return await Promise.all(item.map(value => deepResolve(value)));
-    } else if (isPromise(item)) {
+    } else if (item instanceof Promise) {
         return await deepResolve(await item);
-    } else if (isPrimative(item)) {
+    } else if (undefined === item || null == item || 'string' === typeof item || 'number' === typeof item || 'boolean' === typeof item) {
         return item;
-    } else if (isFunction(item)) {
+    } else if ('function' === typeof item) {
         return await deepResolve(item());
-    } else if (isObject(item)) {
+    } else if ('object' === typeof item) {
         return await resolveObject(item);
     } else {
         throw new Error(`item '${item}' (${typeof item}) is not a known type`);
