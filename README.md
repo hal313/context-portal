@@ -14,11 +14,13 @@ A great use for this is to execute code across boundaries of Chrome extension ru
 Note that the Chrome Extension API does provide a way to execute code across contexts, however there some significant advantages to using this library:
 1. The Chrome Extension API does not handle remote code which executes promises
 2. This library allows functions to be defined in a code context (opposed to a string context), so the code can be evaluated by any toolchain
+3. The Chrome Extension API has some restrictions and incongruent API calls (depending on the type of extension)
 
 ```javascript
 // Create and start a portal instance where the code should be run
 const windowPortal = new Portal(
     // This function sends messages from the portal to the client
+    // NOTE: The sendFunction actually takes two parameters: the message to send AND the orginal request from the remote
     message => window.postMessage(message),
     // This function directs messages sent from the client to the portal message handler
     handler => addEventListener('message', message => handler(message.data))
@@ -57,8 +59,59 @@ remote.createAPI({
 
 It is noteworthy that there are no runtime depedencies required for this library.
 
-## Practical Application - Chrome Extension
-This example demonstrates how a Chrome Extension might use this library in order to execute functions on the content page context from within the popup context.
+## Practical Applications
+
+### Named Portal and Remote
+This example demonstrates how to have multiple portal and remote instances live in the same space. By adding some filters on incoming messages and appending destination data to outgoing messages, any number of portal and remote instances may exist in the same space.
+
+```javascript
+// Create a portal that only listens to messages which have a member "target" with value "pizza"
+// Since there are multiple remotes, the target is attached to outgoing messages as well so that
+// remotes may ignore messages not intended for them
+const pizzaPortal = new Portal(
+    message => window.postMessage(Object.assign({}, message, {target: 'pizza'})),
+    handler => addEventListener('message', message => 'pizza' === message.data.target ? handler(message.data) : null)
+);
+// Start the portal
+pizzaPortal.start();
+//
+// Create a remote which appends the "target" member to outgoing messages with the value "pizza"
+// Since there are multiple remote instances, filter out messages not intended for this instance
+const pizzaRemote = new Remote(
+    message => window.postMessage(Object.assign({}, message, {target: 'pizza'})),
+    handler => addEventListener('message', message => 'pizza' === message.data.target ? handler(message.data) : null)
+);
+
+
+
+// Create a portal that only listens to messages which have a member "target" with value "darko"
+// Since there are multiple remotes, the target is attached to outgoing messages as well so that
+// remotes may ignore messages not intended for them
+const darkoPortal = new Portal(
+    message => window.postMessage(Object.assign({}, message, {target: 'darko'})),
+    // Filter out messages not intended for this portal
+    handler => addEventListener('message', message => 'darko' === message.data.target ? handler(message.data) : null)
+);
+// Start the portal
+darkoPortal.start();
+//
+// Create a remote which appends the "target" member to outgoing messages with the value "pizza"
+// Since there are multiple remote instances, filter out messages not intended for this instance
+const darkoRemote = new Remote(
+    message => window.postMessage(Object.assign({}, message, {target: 'darko'})),
+    // Filter out messages not intended for this portal
+    handler => addEventListener('message', message => 'darko' === message.data.target ? handler(message.data) : null)
+);
+
+
+// Run a script only on the pizzaRemote
+await pizzaRemote.runScript(`console.log('pizza!')`);
+// Run a script only on the darkoRemote
+await darkoRemote.runScript(`console.log('donnie!')`);
+```
+
+### Chrome Extension
+This example demonstrates how a Chrome Extension might use this library in order to execute functions on the content page context from within the popup context. See the full [source code](https://github.com/hal313/context-portal-chrome-extension-example).
 
 This code would be executed in the content page context:
 ```javascript
@@ -71,7 +124,7 @@ import('./portal.js').then(Portal => new Portal.Portal(
 ).start());
 ```
 
-Likewise, the popup context would run this code:
+Likewise, the popup context runs this code:
 ```javascript
 // Instantiate the portal
 const remote = new Remote(
@@ -99,15 +152,20 @@ remote.createAPI({
 ```
 
 ## General Use Notes
-In general, primative values, arrays and JSON-like objects can be used as parameters and values as API function parameters. Likewise, return values for API functions may be primative values, arrays, JSON-like objects and also Promises. The promise will be resolved in the portal context before the resolved value is sent to the remote client.
 
-If a function returns an array that contains a promise value which rejects, the entire function call will reject and the client will receive the rejection.
+### Parameter Inputs
+In general, primative values, arrays and JSON-like objects may be used as parameters and values as API function parameters; as well, `Promise`'s which resolve those types may be used (any parameter which contains `Promise`'s will be resolved within the remote instance before being sent to the portal).
+
+### Function Outputs
+Return values for API functions may be primative values, arrays, JSON-like objects and also Promises. The promise will be resolved in the portal context before the resolved value is sent to the remote client.
+
+If a function execution throws or contains a result which contains a `Promise` that rejects, the entire function call is rejected and the remote instance will receive the rejection.
 
 ### Errors
-If execution fails within the portal context, then an error will be received by any remote instances. All errors in the remote will have a "message" attribute which indicates the error. If the execution in the portal was an Error instance, an addition "name" attribute will be attached to the error object in the remote. In this case, an actual Error instance will be re-created, however only the message will persist; that is to say, the stack trace from the portal will NOT be present on the remote.
+If execution fails within the portal context, then an error will be received by any remote instances as a `Promise` rejection. All errors in the remote contain a "message" attribute which indicates the error. If the execution in the portal was an Error instance, an additional "name" attribute will be attached to the error object in the remote. In this case, an actual Error instance will be re-created, however only the message will persist; that is to say, the stack trace from the portal will _not_ be present on the remote.
 
 ## Limitations
-Currently observables are not implemented.
+Currently observables and callbacks are not implemented. More precisely, with the exception of the `Promise` class, no functions which return asynchronous results should be expected to work.
 
 Context and global variables are not implemented:
 ```javascript
@@ -185,7 +243,16 @@ The message formats between the portal and remote instances are documented below
 ```
 ## Developing
 
+### Playground
+A basic HTML page which loads the `Portal` and `Remote` classes can be served through some IDE's, or via the command:
+```bash
+npx http-server -o test/playground.html
+```
+
+The developer console may be used in order to experiment with the library.
+
 ### Tests
+
 #### Browser
 Tests can be run in a browser a few different ways. However, tests MUST be run from a server and not loaded from disk, as doing so will violate security.
 
