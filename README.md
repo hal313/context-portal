@@ -69,7 +69,9 @@ This example demonstrates how to have multiple portal and remote instances live 
 // Since there are multiple remotes, the target is attached to outgoing messages as well so that
 // remotes may ignore messages not intended for them
 const pizzaPortal = new Portal(
-    message => window.postMessage(Object.assign({}, message, {target: 'pizza'})),
+    // In this scenario, "request" represents the message sent from the remote; the message contains
+    // the target ('pizza'); it is OK to use either the string literal or `request.target`
+    (message, request) => window.postMessage(Object.assign({}, message, {target: request.target/*pizza*/})),
     handler => addEventListener('message', message => 'pizza' === message.data.target ? handler(message.data) : null)
 );
 // Start the portal
@@ -88,6 +90,7 @@ const pizzaRemote = new Remote(
 // Since there are multiple remotes, the target is attached to outgoing messages as well so that
 // remotes may ignore messages not intended for them
 const darkoPortal = new Portal(
+    // Contrast with pizzaPortal, the target is a string literal; either approach is OK
     message => window.postMessage(Object.assign({}, message, {target: 'darko'})),
     // Filter out messages not intended for this portal
     handler => addEventListener('message', message => 'darko' === message.data.target ? handler(message.data) : null)
