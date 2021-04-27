@@ -44,6 +44,11 @@ describe('Remote', function () {
     let hostAPI;
 
 
+    beforeEach(function spyOnConsole() {
+        // Replace console.log and console.error with fakes so that they can be spied on without cluttering the console
+        sinon.replace(console, "error", sinon.fake.returns(undefined));
+        sinon.replace(console, "log", sinon.fake.returns(undefined));
+    });
 
     before(function startPortal() {
         portal.start();
@@ -341,8 +346,6 @@ describe('Remote', function () {
         describe('Success', function () {
 
             it('should run a script (using await)', async function () {
-                spy(console, 'log');
-
                 const result = await remotePortal.runScript('console.log("test"); return 4;');
 
                 expect(console.log.calledOnce).to.be.true;
@@ -351,8 +354,6 @@ describe('Remote', function () {
             });
 
             it('should run a script (using promises)', function () {
-                spy(console, 'log');
-
                 return remotePortal.runScript('console.log("test"); return 4;')
                 .then(result => {
                     expect(console.log.calledOnce).to.be.true;
