@@ -35,9 +35,10 @@ var api = await remote.createAPI({
     // TODO: Implement "multiply" and "divide"
 });
 
+// Execute some API calls
 console.log('api.add(2, 3)', await api.add(2, 3));
 console.log('api.subtract(5, 3)', await api.subtract(5, 3));
 
-// Run a sample script;
+// Run a sample script
 await remote.runScript("var message = 'running in the portal'; console.log(message)");
 `.trim();

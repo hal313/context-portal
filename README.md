@@ -249,7 +249,7 @@ The message formats between the portal and remote instances are documented below
 ### Playground
 A basic HTML page which loads the `Portal` and `Remote` classes can be served through some IDE's, or via the command:
 ```bash
-npx http-server -o test/playground/playground.html
+npx http-server -o examples/playground/playground.html
 ```
 
 The web IDE has some sample code which can be run in order to see how the Portal and Remote work together.
