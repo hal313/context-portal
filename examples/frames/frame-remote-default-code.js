@@ -12,7 +12,7 @@ export const defaultCode = `
 // NOTE: Be sure to use window.portal so that subsequent runs do not create new
 //       remote instances instances
 window.remote = window.remote || new Remote(
-    (responseMessage, requestMessage) => window.parent.frames[0].postMessage(responseMessage),
+    responseMessage => window.parent.frames[0].postMessage(responseMessage),
     // message.data contains the request from remote instances
     (handler) => window.addEventListener('message', message => handler(message.data))
 );

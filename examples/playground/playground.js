@@ -21,7 +21,7 @@ const consoleContainer = document.getElementById('console-container');
  *
  * @returns {Promise} which resolves once the code has executed
  */
-const runCode = () => eval(`(async () => {${editor.getValue()}})()`);
+const runCode = () => eval(`(async () => {${editor.getValue()}\n})()`);
 
 /**
  * Clears the "console" elements.
