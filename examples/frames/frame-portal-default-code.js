@@ -17,6 +17,9 @@ window.portal = window.portal || new Portal(
     handler => window.addEventListener('message', message => handler(message.data))
 );
 // Start the portal
-window.portal.start();
-console.log('portal started');
+// Start the portal if it is not runnign
+if (!window.portal.listening) {
+    window.portal.start();
+    console.log('portal started');
+}
 `.trim();

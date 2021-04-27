@@ -16,8 +16,11 @@ window.portal = window.portal || new Portal(
     // message.data contains the request from remote instances
     handler => window.addEventListener('message', message => handler(message.data))
 );
-// Start the portal
-window.portal.start();
+// Start the portal if it is not runnign
+if (!window.portal.listening) {
+    window.portal.start();
+    console.log('portal started');
+}
 
 // Create a remote instance - do not create a new instance if an instance exists
 // NOTE: Be sure to use window.portal so that subsequent runs do not create new
