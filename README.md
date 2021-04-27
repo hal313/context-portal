@@ -246,14 +246,25 @@ The message formats between the portal and remote instances are documented below
 ```
 ## Developing
 
-### Playground
-A basic HTML page which loads the `Portal` and `Remote` classes can be served through some IDE's, or via the command:
+### Examples
+
+#### Playground
+A basic HTML page which loads the `Portal` and `Remote` classes and can be served through some IDE's, or via the command:
 ```bash
 npx http-server -o examples/playground/playground.html
 ```
 
-The web IDE has some sample code which can be run in order to see how the Portal and Remote work together.
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Notice how the both the Portal
+and Remote reside in the same context. In this case, messages may be passed using `window.postMessage`.
 
+#### Frames
+A basic HTML page which loads two frames, one for the Portal and one for the Remote. This example can be served through some IDE's, or via the command:
+```bash
+npx http-server -o examples/frames/frames.html
+```
+
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Because the Portal and Remote exist
+in different contexts, the messages are passed using `window.parent.frames[0]` and `window.parent.frames[1]`.
 ### Tests
 
 #### Browser

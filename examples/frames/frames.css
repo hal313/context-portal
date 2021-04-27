@@ -1,0 +1,14 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+body iframe {
+    height: 100%;
+    border: none;
+    flex: 1;
+}
+
+.frame-container {
+    display: flex;
+    height: 100vh;
+}
