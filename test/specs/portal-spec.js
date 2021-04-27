@@ -35,7 +35,7 @@ describe('Portal', function () {
 
     beforeEach(function spyOnConsole() {
         // Replace console.log with a fake so that it can be spied on without cluttering the console
-        sinon.replace(console, "log", sinon.fake.returns(undefined));
+        sinon.replace(console, 'log', sinon.fake.returns(undefined));
     });
 
     afterEach(function stopPortal() {

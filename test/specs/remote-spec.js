@@ -24,7 +24,7 @@ describe('Remote', function () {
 
 
     const portalMessageFn = sinon.fake(message => window.postMessage(message));
-    const portalRegisterFn = sinon.fake(handler => window.addEventListener("message", (event) => handler(event.data)));
+    const portalRegisterFn = sinon.fake(handler => window.addEventListener('message', (event) => handler(event.data)));
     // Create the portal
     const portal = new Portal(
         portalMessageFn,
@@ -33,7 +33,7 @@ describe('Remote', function () {
 
 
     const remoteMessageFn = sinon.fake(message => window.postMessage(message));
-    const remoteRegisterFn = sinon.fake(handler => window.addEventListener("message", (event) => handler(event.data)));
+    const remoteRegisterFn = sinon.fake(handler => window.addEventListener('message', (event) => handler(event.data)));
     // Create the remote
     const remotePortal = new Remote(
         remoteMessageFn,
@@ -45,8 +45,8 @@ describe('Remote', function () {
 
     beforeEach(function spyOnConsole() {
         // Replace console.log and console.error with fakes so that they can be spied on without cluttering the console
-        sinon.replace(console, "error", sinon.fake.returns(undefined));
-        sinon.replace(console, "log", sinon.fake.returns(undefined));
+        sinon.replace(console, 'error', sinon.fake.returns(undefined));
+        sinon.replace(console, 'log', sinon.fake.returns(undefined));
     });
 
     before(function startPortal() {
