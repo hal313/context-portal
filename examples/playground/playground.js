@@ -3,22 +3,60 @@ import { Portal } from '../../src/Portal.js';
 import { Remote } from '../../src/Remote.js';
 import { defaultCode } from './default-code.js';
 
-// Assign the global classes
+
+// Assign the global classes (this will be helpful for the playground code window)
 window.Portal = Portal;
 window.Remote = Remote;
 
+
+// The editor
+let editor;
 // The container for console messages
 const consoleContainer = document.getElementById('console-container');
 
-let editor;
 
-// Wrap the code in an async IIFE so that await can be used
+/**
+ * Runs the code in the editor. The code is wrapped in an async IIFE so that await
+ * may be used and also to protect the global context from contamination.
+ *
+ * @returns {Promise} which resolves once the code has executed
+ */
 const runCode = () => eval(`(async () => {${editor.getValue()}})()`);
 
+/**
+ * Clears the "console" elements.
+ *
+ * @returns {undefined}
+ */
 const clearConsole = () => consoleContainer.innerHTML = '';
 
+/**
+ * Resets the editor in the code to the default value.
+ *
+ * @returns {undefined}
+ */
 const resetCode = () => editor.setValue(defaultCode);
 
+
+
+const createConsoleLine = (className, ...strings) => {
+    const line = document.createElement('div');
+    line.classList.add(className);
+    line.innerHTML = strings.reduce((previous, current) => {
+        if ('object' === typeof current) {
+            previous += `\n${JSON.stringify(current, null, 2)}`;
+        } else {
+            previous += '' + current;
+        }
+        return previous + ' ';
+    }, '');
+    return line;
+}
+
+/**
+ * Initializes the "console" by wrapping window.console.[log|info|warn|error] with functions which will
+ * output to the console UI component as well as delegate to the intended function.
+ */
 const initConsole = () => {
     // Console management
     //
@@ -34,49 +72,53 @@ const initConsole = () => {
     window.console.log = (...strings) => {
         orignalConsole.log(...strings);
 
-        const line = document.createElement('div');
-        // line.innerHTML = strings.join(' ');
-        line.innerHTML = strings.reduce((previous, current) => {
-            if ('object' === typeof current) {
-                previous += `\n${JSON.stringify(current, null, 2)}`;
-            } else {
-                previous += '' + current;
-            }
-            return previous + ' ';
-        }, '');
-        consoleContainer.append(line);
+        // Output to the "console"
+        consoleContainer.append(createConsoleLine('log', ...strings));
+    };
+    // Overwrite the original console.info function
+    window.console.info = (...strings) => {
+        // Delegagte to the original
+        orignalConsole.info(...strings);
+
+        // Output to the "console"
+        consoleContainer.append(createConsoleLine('info', ...strings));
+    };
+    // Overwrite the original console.warn function
+    window.console.warn = (...strings) => {
+        // Delegagte to the original
+        orignalConsole.warn(...strings);
+
+        // Output to the "console"
+        consoleContainer.append(createConsoleLine('warn', ...strings));
     };
     // Overwrite the original console.error function
     window.console.error = (...strings) => {
         // Delegagte to the original
         orignalConsole.error(...strings);
 
-        const line = document.createElement('div');
-        line.classList.add('error');
-        line.innerHTML = strings.reduce((previous, current) => {
-            if ('object' === typeof current) {
-                previous += `\n${JSON.stringify(current, null, 2)}`;
-            } else {
-                previous += '' + current;
-            }
-            return previous + ' ';
-        }, '');
-        consoleContainer.append(line);
+        // Output to the "console"
+        consoleContainer.append(createConsoleLine('error', ...strings));
     };
 };
 
+/**
+ * Initializes the listeners for button clicks and such.
+ */
 const initListeners = () => {
     document.getElementById('js-button-clear').addEventListener('click', clearConsole);
     document.getElementById('js-button-run').addEventListener('click', runCode);
     document.getElementById('js-button-reset').addEventListener('click', resetCode);
 };
 
+/**
+ * Initializes the code editor.
+ */
 const initEditor = () => {
     // Set the theme for the editor
-    monaco.editor.setTheme('vs-dark');
+    window.monaco.editor.setTheme('vs-dark');
 
     // Construct the editor
-    editor = monaco.editor.create(document.getElementById('code-container'), {
+    editor = window.monaco.editor.create(document.getElementById('code-container'), {
         value: defaultCode,
         language: 'javascript'
     });
@@ -88,14 +130,11 @@ const initEditor = () => {
     editor.focus();
 
     // Add a shortcut command to run the code
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCode);
+    editor.addCommand(window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.Enter, runCode);
 };
 
 
-
-
-
-
+// Initialize the editor, console and listeners
+initEditor();
 initConsole();
 initListeners();
-initEditor();
