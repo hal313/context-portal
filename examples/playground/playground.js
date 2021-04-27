@@ -38,7 +38,13 @@ const clearConsole = () => consoleContainer.innerHTML = '';
 const resetCode = () => editor.setValue(defaultCode);
 
 
-
+/**
+ * Creates an Element which represents a line of console output.
+ *
+ * @param {string} className the class name to add to the created element
+ * @param  {...any} strings the parameters to output
+ * @returns {Element} an Element instance which represents a line of console output
+ */
 const createConsoleLine = (className, ...strings) => {
     const line = document.createElement('div');
     line.classList.add(className);
