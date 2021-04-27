@@ -4,7 +4,7 @@ export const defaultCode = `
 // ========================================================================== //
 
 // ========================================================================== //
-// NOTE: The variables "portal" and "remote" are declared s globals
+// NOTE: The variables "portal" and "remote" are declared as globals
 // NOTE: The classes "Portal" and "Remote" are globals
 
 
