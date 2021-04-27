@@ -8,7 +8,6 @@ const afterEach = Mocha.afterEach;
 const after = Mocha.after;
 const before = Mocha.before;
 const expect = chai.expect;
-const spy = sinon.spy;
 
 // Configure mocha
 mocha.setup({
