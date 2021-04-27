@@ -1,7 +1,7 @@
 // Import the modules
 import { Portal } from '../../src/Portal.js';
 import { Remote } from '../../src/Remote.js';
-import { defaultCode } from './default-code.js';
+import { defaultCode } from './playground-default-code.js';
 
 
 // Assign the global classes (this will be helpful for the playground code window)
