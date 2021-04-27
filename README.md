@@ -265,6 +265,16 @@ npx http-server -o examples/frames/frames.html
 
 The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Because the Portal and Remote exist
 in different contexts, the messages are passed using `window.parent.frames[0]` and `window.parent.frames[1]`.
+
+#### Windows
+A basic HTML page which loads two windows, one for the Portal and one for the Remote. This example can be served through some IDE's, or via the command:
+```bash
+npx http-server -o examples/windows/window-parent-portal.html
+```
+
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Because the Portal and Remote exist
+in different windows, the messages are passed using `window.childWindow` and `window.opener`.
+
 ### Tests
 
 #### Browser
