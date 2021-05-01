@@ -90,13 +90,16 @@ const addFunctionToPortalContext = async (name, fnString) => runScriptInPortalCo
  */
 const runFunctionInPortalContext = async (name, params) => {
     // Resolve the parameters before running the script
-    const resolvedParams = await Resolver.deepResolve(params);
+    // The resolvedParams must be an array, so if there are no params, be sure to return an array
+    const resolvedParams = (await Resolver.deepResolve(params)) || [];
 
     return new Promise((resolve/*, reject*/) => {
         // Need to quote the string params
         const paramArray = resolvedParams.map(value => 'string' === typeof value ? `'${value}'` : value);
-        // Construct the script to execute `return functionName(param1, parame)`
-        const code = `return ${name}(${paramArray.join(',')})`;
+        // Construct the script to execute `return functionName(param1, param2, ..., paramN)`
+        let paramString = paramArray.reduce((previous, current) => previous + current + ',', '');
+        paramString = paramString.trim().substring(0, paramString.length-1);
+        const code = `return ${name}(${paramString})`;
         // Resolve the value of running the script
         resolve(runScriptInPortalContext(code));
     });
@@ -274,8 +277,8 @@ export class Portal {
                 this.sendFunction(createErrorMessage(ACTIONS.runFunctionComplete, error, remoteRequestMessage), remoteRequestMessage);
                 reject(error);
             } else {
-                // Excecute the function
-                runFunctionInPortalContext(name, params)
+                // Excecute the function (params is an array containing 1 array, which is the actual params to use)
+                runFunctionInPortalContext(name, params[0])
                 .then(result => {
                     // Resolve the result
                     this.sendFunction(createSuccessMessage(ACTIONS.runFunctionComplete, result, remoteRequestMessage), remoteRequestMessage);

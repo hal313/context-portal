@@ -66,6 +66,7 @@ describe('Remote', function () {
             rejectPromise: () => Promise.reject('because i said so'),
             throwError: () => {throw new Error('some error')},
             returnJSON: () => ({one: 1, two: 'too', three: true}),
+            echo: message => `${message}, ${typeof message}`,
             add: (a, b) => a+b
         });
     });
@@ -94,6 +95,36 @@ describe('Remote', function () {
     });
 
     describe('Executing Host', function () {
+
+        describe('Parameter Types', function () {
+
+            it('should properly handle a string parameter', async function () {
+                const result = await hostAPI.echo('some string');
+                expect(result).to.equal('some string, string');
+            });
+
+            it('should properly handle a number parameter', async function () {
+                const result = await hostAPI.echo(1);
+                expect(result).to.equal('1, number');
+            });
+
+            it('should properly handle a boolean parameter', async function () {
+                const result = await hostAPI.echo(true);
+                expect(result).to.equal('true, boolean');
+            });
+
+            it('should properly handle a null parameter', async function () {
+                const result = await hostAPI.echo(null);
+                console.log('result', result);
+                expect(result).to.equal('null, object');
+            });
+
+            it('should properly handle an undefined parameter', async function () {
+                const result = await hostAPI.echo(undefined);
+                expect(result).to.equal('undefined, undefined');
+            });
+
+        });
 
         describe('String', function () {
 

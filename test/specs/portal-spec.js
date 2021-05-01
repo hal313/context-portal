@@ -211,7 +211,7 @@ describe('Portal', function () {
                 const remoteRequestMessage = createRemoteRequestMessage();
 
                 await portal.addFunction(fnName, (a, b) => a * b, createRemoteRequestMessage());
-                await portal.runFunction(fnName, remoteRequestMessage, 1, 5);
+                await portal.runFunction(fnName, remoteRequestMessage, [1, 5]);
 
                 const args = messageFn.lastCall.args
                 expect(args[0].source).to.equal('portal');
@@ -232,7 +232,7 @@ describe('Portal', function () {
                     const args = ['eh', 'bee', 'sea'];
 
                     await portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage());
-                    await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
+                    await portal.runFunction(functionName, createRemoteRequestMessage(), args);
 
                     // console.log should have been called once
                     expect(console.log.callCount).to.equal(1);
@@ -248,7 +248,7 @@ describe('Portal', function () {
                     const args = ['eh', 'bee', 'sea'];
 
                     return portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage())
-                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))
+                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), args))
                     .then(() => {
                         // console.log should have been called once
                         expect(console.log.callCount).to.equal(1);
@@ -266,12 +266,12 @@ describe('Portal', function () {
 
                 it('should return the correct value (using async)', async function () {
                     await portal.addFunction('sum', (a, b) => a+b, createRemoteRequestMessage());
-                    expect(await portal.runFunction('sum', createRemoteRequestMessage(), 10, 20)).to.equal(30);
+                    expect(await portal.runFunction('sum', createRemoteRequestMessage(), [10, 20])).to.equal(30);
                 });
 
                 it('should return the correct value (using promises)', async function () {
                     return portal.addFunction('sum', (a, b) => a+b, createRemoteRequestMessage())
-                    .then(() => portal.runFunction('sum', createRemoteRequestMessage(), 10, 20))
+                    .then(() => portal.runFunction('sum', createRemoteRequestMessage(), [10, 20]))
                     .then(sum => expect(sum).to.equal(30));
                 });
 
@@ -284,7 +284,7 @@ describe('Portal', function () {
                     const args = ['eh', 'bee', 'sea'];
 
                     await portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage());
-                    await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
+                    await portal.runFunction(functionName, createRemoteRequestMessage(), args);
 
                     // console.log should have been called once
                     expect(console.log.callCount).to.equal(1);
@@ -298,7 +298,7 @@ describe('Portal', function () {
                     const args = ['eh', 'bee', 'sea'];
 
                     return portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage())
-                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))
+                    .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), args))
                     .then(() => {
                         // console.log should have been called once
                         expect(console.log.callCount).to.equal(1);
