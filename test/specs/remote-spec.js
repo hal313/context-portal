@@ -8,7 +8,6 @@ const afterEach = Mocha.afterEach;
 const after = Mocha.after;
 const before = Mocha.before;
 const expect = chai.expect;
-const spy = sinon.spy;
 
 // Configure mocha
 mocha.setup({
@@ -25,7 +24,7 @@ describe('Remote', function () {
 
 
     const portalMessageFn = sinon.fake(message => window.postMessage(message));
-    const portalRegisterFn = sinon.fake(handler => window.addEventListener("message", (event) => handler(event.data)));
+    const portalRegisterFn = sinon.fake(handler => window.addEventListener('message', (event) => handler(event.data)));
     // Create the portal
     const portal = new Portal(
         portalMessageFn,
@@ -34,7 +33,7 @@ describe('Remote', function () {
 
 
     const remoteMessageFn = sinon.fake(message => window.postMessage(message));
-    const remoteRegisterFn = sinon.fake(handler => window.addEventListener("message", (event) => handler(event.data)));
+    const remoteRegisterFn = sinon.fake(handler => window.addEventListener('message', (event) => handler(event.data)));
     // Create the remote
     const remotePortal = new Remote(
         remoteMessageFn,
@@ -44,6 +43,11 @@ describe('Remote', function () {
     let hostAPI;
 
 
+    beforeEach(function spyOnConsole() {
+        // Replace console.log and console.error with fakes so that they can be spied on without cluttering the console
+        sinon.replace(console, 'error', sinon.fake.returns(undefined));
+        sinon.replace(console, 'log', sinon.fake.returns(undefined));
+    });
 
     before(function startPortal() {
         portal.start();
@@ -341,8 +345,6 @@ describe('Remote', function () {
         describe('Success', function () {
 
             it('should run a script (using await)', async function () {
-                spy(console, 'log');
-
                 const result = await remotePortal.runScript('console.log("test"); return 4;');
 
                 expect(console.log.calledOnce).to.be.true;
@@ -351,8 +353,6 @@ describe('Remote', function () {
             });
 
             it('should run a script (using promises)', function () {
-                spy(console, 'log');
-
                 return remotePortal.runScript('console.log("test"); return 4;')
                 .then(result => {
                     expect(console.log.calledOnce).to.be.true;

@@ -5,7 +5,6 @@ const describe = Mocha.describe;
 const it = Mocha.it;
 const afterEach = Mocha.afterEach;
 const expect = chai.expect;
-const spy = sinon.spy;
 
 // Configure mocha
 mocha.setup({
@@ -34,6 +33,10 @@ describe('Portal', function () {
         registerFn
     );
 
+    beforeEach(function spyOnConsole() {
+        // Replace console.log with a fake so that it can be spied on without cluttering the console
+        sinon.replace(console, 'log', sinon.fake.returns(undefined));
+    });
 
     afterEach(function stopPortal() {
         portal.stop();
@@ -88,8 +91,6 @@ describe('Portal', function () {
             describe('No Return Value', function () {
 
                 it('should run code snippets (using await)', async function () {
-                    spy(console, 'log');
-
                     await portal.runScript(`console.log('running simple code');`, createRemoteRequestMessage());
 
                     // console.log should have been called once
@@ -99,8 +100,6 @@ describe('Portal', function () {
                 });
 
                 it('should run code snippets (using promises)', function () {
-                    spy(console, 'log');
-
                     // Check the args
                     return portal.runScript(`console.log('running simple code'); return 1;`, createRemoteRequestMessage())
                     .then(() => {
@@ -232,8 +231,6 @@ describe('Portal', function () {
                     const functionName = 'paramsFunctionSum';
                     const args = ['eh', 'bee', 'sea'];
 
-                    spy(console, 'log');
-
                     await portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage());
                     await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
 
@@ -249,8 +246,6 @@ describe('Portal', function () {
                 it('should correctly pass parameters (using promises)', function () {
                     const functionName = 'paramsFunctionSum';
                     const args = ['eh', 'bee', 'sea'];
-
-                    spy(console, 'log');
 
                     return portal.addFunction(functionName, function paramsFunctionSum(a, b, c) {console.log('paramsFunctionSum', a, b, c)}, createRemoteRequestMessage())
                     .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))
@@ -288,8 +283,6 @@ describe('Portal', function () {
                     const functionName = 'paramsFunctionSum';
                     const args = ['eh', 'bee', 'sea'];
 
-                    spy(console, 'log');
-
                     await portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage());
                     await portal.runFunction(functionName, createRemoteRequestMessage(), ...args);
 
@@ -303,8 +296,6 @@ describe('Portal', function () {
                 it('should not use arguments in an arrow function (using promises)', function () {
                     const functionName = 'paramsFunctionSum';
                     const args = ['eh', 'bee', 'sea'];
-
-                    spy(console, 'log');
 
                     return portal.addFunction(functionName, () => console.log('paramsFunctionSum', Array.from(arguments)), createRemoteRequestMessage())
                     .then(() => portal.runFunction(functionName, createRemoteRequestMessage(), ...args))

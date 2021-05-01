@@ -69,7 +69,9 @@ This example demonstrates how to have multiple portal and remote instances live 
 // Since there are multiple remotes, the target is attached to outgoing messages as well so that
 // remotes may ignore messages not intended for them
 const pizzaPortal = new Portal(
-    message => window.postMessage(Object.assign({}, message, {target: 'pizza'})),
+    // In this scenario, "request" represents the message sent from the remote; the message contains
+    // the target ('pizza'); it is OK to use either the string literal or `request.target`
+    (message, request) => window.postMessage(Object.assign({}, message, {target: request.target/*pizza*/})),
     handler => addEventListener('message', message => 'pizza' === message.data.target ? handler(message.data) : null)
 );
 // Start the portal
@@ -88,6 +90,7 @@ const pizzaRemote = new Remote(
 // Since there are multiple remotes, the target is attached to outgoing messages as well so that
 // remotes may ignore messages not intended for them
 const darkoPortal = new Portal(
+    // Contrast with pizzaPortal, the target is a string literal; either approach is OK
     message => window.postMessage(Object.assign({}, message, {target: 'darko'})),
     // Filter out messages not intended for this portal
     handler => addEventListener('message', message => 'darko' === message.data.target ? handler(message.data) : null)
@@ -243,13 +246,35 @@ The message formats between the portal and remote instances are documented below
 ```
 ## Developing
 
-### Playground
-A basic HTML page which loads the `Portal` and `Remote` classes can be served through some IDE's, or via the command:
+### Examples
+All examples can be run locally, or by visting the hosted [examples page](https://hal313.github.io/context-portal/).
+
+#### Playground
+A basic HTML page which loads the `Portal` and `Remote` classes and can be served through some IDE's, or via the command:
 ```bash
-npx http-server -o test/playground.html
+npx http-server -o examples/playground/playground.html
 ```
 
-The developer console may be used in order to experiment with the library.
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Notice how the both the Portal
+and Remote reside in the same context. In this case, messages may be passed using `window.postMessage`.
+
+#### Frames
+A basic HTML page which loads two frames, one for the Portal and one for the Remote. This example can be served through some IDE's, or via the command:
+```bash
+npx http-server -o examples/frames/frames.html
+```
+
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Because the Portal and Remote exist
+in different contexts, the messages are passed using `window.parent.frames[0]` and `window.parent.frames[1]`.
+
+#### Windows
+A basic HTML page which loads two windows, one for the Portal and one for the Remote. This example can be served through some IDE's, or via the command:
+```bash
+npx http-server -o examples/windows/window-parent-portal.html
+```
+
+The web IDE has some sample code which can be run in order to see how the Portal and Remote work together. Because the Portal and Remote exist
+in different windows, the messages are passed using `window.childWindow` and `window.opener`.
 
 ### Tests
 

@@ -1,0 +1,53 @@
+.screen-container {
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+#code-container {
+    border: 1px solid grey;
+
+    flex: 5 0 0;
+}
+
+#console-container {
+    height: 100%;
+    font-family: monospace;
+
+    padding-top: 5px;
+    padding-left: 5px;
+}
+#console-container.dark {
+    background-color: black;
+}
+#console-container.dark .log {
+    color: white;
+}
+#console-container .info {
+    color: blue;
+}
+#console-container .warn {
+    color: orange;
+}
+#console-container .error {
+    color: red;
+}
+
+.button-and-console-container {
+    flex: 2 0 0;
+    min-height: 64px;
+}
+
+.button-and-console-container .button-container {
+    padding-top: 5px;
+    padding-right: 5px;
+}
+
+.button-and-console-container .button-container .btn {
+    opacity: .8;
+}
+
+.button-and-console-container .button-container .button-run {
+    margin: 5px;
+}
