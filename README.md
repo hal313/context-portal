@@ -247,6 +247,7 @@ The message formats between the portal and remote instances are documented below
 ## Developing
 
 ### Examples
+All examples can be run locally, or by visting the hosted [examples page](https://hal313.github.io/context-portal/).
 
 #### Playground
 A basic HTML page which loads the `Portal` and `Remote` classes and can be served through some IDE's, or via the command:
